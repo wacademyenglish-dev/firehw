@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>WOLFLIX: HR Compliance Assessment</title>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        hr: {
+                            bg: '#e2e8f0',        
+                            panel: '#f8fafc',     
+                            text: '#1e293b',      
+                            border: '#94a3b8',    
+                            blue: '#0284c7',      
+                            red: '#dc2626'
+                        }
+                    },
+                    fontFamily: {
+                        base: ['Inter', 'sans-serif'],
+                        mono: ['Courier Prime', 'monospace']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #cbd5e1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            background-image: radial-gradient(#94a3b8 2px, transparent 2px);
+            background-size: 30px 30px;
+        }
+
+        /* Mobile Container Simulation */
+        #mobile-container {
+            width: 100%;
+            max-width: 400px;
+            height: 100dvh;
+            max-height: 850px;
+            background-color: #f8fafc;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        }
+
+        @media (min-width: 480px) {
+            #mobile-container {
+                height: 90vh;
+                border-radius: 1.5rem;
+                border: 6px solid #1e293b;
+            }
+        }
+
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* Screen Transitions */
+        .screen {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            display: flex; flex-direction: column;
+            background-color: #f8fafc;
+            transform: translateX(100%);
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            z-index: 10;
+        }
+        .screen.active { transform: translateX(0); z-index: 20; }
+        .screen.previous { transform: translateX(-100%); z-index: 10; }
+
+        /* Option Buttons */
+        .option-btn {
+            background-color: #ffffff;
+            border: 2px solid #cbd5e1;
+            color: #1e293b;
+            font-weight: 600;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            transition: all 0.2s ease;
+            font-family: 'Inter', sans-serif;
+        }
+        .option-btn:active { transform: translateY(2px); box-shadow: none; }
+        .option-btn.selected {
+            border-color: #0284c7;
+            background-color: #f0f9ff;
+            box-shadow: 0 4px 10px rgba(2, 132, 199, 0.15);
+            transform: translateY(-2px);
+        }
+        .option-btn.correct {
+            border-color: #16a34a;
+            background-color: #f0fdf4;
+            color: #14532d;
+        }
+        .option-btn.wrong {
+            border-color: #dc2626;
+            background-color: #fef2f2;
+            color: #7f1d1d;
+            opacity: 0.8;
+        }
+
+        /* Action Button */
+        .hr-action-btn {
+            background-color: #0284c7;
+            color: #ffffff;
+            font-family: 'Courier Prime', monospace;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-radius: 4px;
+            box-shadow: 0 4px 0 #0369a1;
+            transition: all 0.15s ease;
+        }
+        .hr-action-btn:active:not(:disabled) {
+            transform: translateY(4px);
+            box-shadow: 0 0 0 #0369a1;
+        }
+        .hr-action-btn:disabled {
+            background-color: #94a3b8;
+            box-shadow: 0 4px 0 #64748b;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Progress Bar */
+        .progress-track { background-color: #e2e8f0; }
+        .progress-fill { background-color: #0284c7; transition: width 0.3s ease; }
+    </style>
+</head>
+<body>
+
+    <!-- DEVICE CONTAINER -->
+    <div id="mobile-container">
+
+        <!-- STATUS BAR -->
+        <div class="h-8 bg-slate-900 text-slate-400 flex justify-between items-center px-4 text-[10px] font-mono z-50 shrink-0 uppercase tracking-widest">
+            <span id="clock">09:00</span>
+            <div class="flex gap-2 items-center">
+                <span>Dunder Mifflin HR</span>
+                <span>📋 100%</span>
+            </div>
+        </div>
+
+        <!-- SCREEN 1: LOGIN -->
+        <div id="screen-login" class="screen active flex items-center justify-center p-6 text-center relative overflow-hidden">
+            <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-5 pointer-events-none"></div>
+            
+            <div class="z-10 w-full flex flex-col items-center">
+                <div class="w-24 h-24 bg-slate-100 border-4 border-slate-300 rounded-lg flex items-center justify-center mb-8 shadow-sm">
+                    <span class="text-5xl">🗂️</span>
+                </div>
+                
+                <h2 class="font-mono text-xs tracking-widest text-sky-600 mb-2 uppercase border border-sky-600 px-3 py-1 rounded">Annual Review</h2>
+                <h1 class="font-base text-4xl font-black tracking-tighter mb-4 text-slate-800 uppercase">Compliance Test</h1>
+                <p class="font-mono text-sm text-slate-600 mb-12 italic leading-relaxed bg-slate-100 p-4 rounded border border-slate-200">
+                    "Evaluate crisis management procedures, liability protocols, and structural grammar."
+                </p>
+
+                <button onclick="startQuiz()" class="w-full hr-action-btn text-lg py-4">
+                    [ INITIATE EXAM ]
+                </button>
+            </div>
+        </div>
+
+        <!-- SCREEN 2: QUIZ -->
+        <div id="screen-quiz" class="screen flex flex-col bg-slate-50">
+            <!-- Header -->
+            <header class="bg-slate-900 border-b-4 border-sky-600 p-4 shrink-0 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <span class="text-xl">📝</span>
+                    <span class="font-mono text-white uppercase tracking-widest text-xs" id="q-category">ASSESSMENT</span>
+                </div>
+                <span class="font-black text-sky-600 font-mono text-sm bg-slate-800 px-2 py-1 rounded" id="q-counter">1/15</span>
+            </header>
+
+            <!-- Progress Bar -->
+            <div class="w-full h-1.5 progress-track shrink-0">
+                <div id="progress-bar" class="h-full progress-fill" style="width: 0%;"></div>
+            </div>
+
+            <!-- Scrollable Content Area -->
+            <div class="flex-1 overflow-y-auto no-scrollbar p-6 flex flex-col relative">
+                
+                <!-- Question Text -->
+                <h2 id="q-text" class="text-xl font-bold text-slate-800 mb-8 leading-relaxed bg-white p-5 rounded border border-slate-200 shadow-sm">
+                    Question goes here?
+                </h2>
+
+                <!-- Options Grid -->
+                <div id="options-container" class="flex flex-col gap-3 mb-8">
+                    <!-- Options injected via JS -->
+                </div>
+
+                <!-- Spacer -->
+                <div class="flex-1"></div>
+
+                <!-- Feedback Area -->
+                <div id="feedback-area" class="hidden mb-6 p-4 rounded font-mono text-sm font-bold border-l-4 bg-white shadow-sm">
+                    Feedback goes here
+                </div>
+
+            </div>
+
+            <!-- Bottom Action Bar -->
+            <div class="p-4 bg-white border-t border-slate-200 shrink-0">
+                <button id="btn-next" onclick="handleNext()" disabled class="w-full hr-action-btn text-lg py-4 opacity-50">
+                    SUBMIT
+                </button>
+            </div>
+        </div>
+
+        <!-- SCREEN 3: RESULTS -->
+        <div id="screen-results" class="screen flex flex-col bg-slate-50">
+            <header class="bg-slate-900 text-white p-4 shrink-0 text-center border-b-4 border-sky-600">
+                <span class="font-mono font-bold uppercase tracking-widest text-xs text-sky-400">INCIDENT REPORT FILED</span>
+            </header>
+
+            <div class="flex-1 flex flex-col items-center justify-center p-8 text-center">
+                <div id="result-icon" class="text-7xl mb-6 drop-shadow-md">🧯</div>
+                <h1 id="result-title" class="text-3xl font-black text-slate-800 uppercase tracking-tighter mb-2">Corporate Liability</h1>
+                <p id="result-subtitle" class="text-sm font-mono text-slate-500 mb-8 uppercase tracking-widest">Score: <span id="final-score" class="font-bold text-sky-600 text-lg">15</span> / 15</p>
+                
+                <div class="w-full bg-white p-6 border border-slate-200 rounded shadow-sm mb-10">
+                    <p id="result-msg" class="font-base text-sm text-slate-600 italic leading-relaxed">
+                        "Your assessment has been reviewed by Corporate."
+                    </p>
+                </div>
+
+                <button onclick="restartApp()" class="w-full hr-action-btn text-sm py-4">
+                    RETAKE MODULE
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        // --- 1. Clock Update ---
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('clock').innerText = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // --- 2. Questions Database (15 Items - B2/C1 Level) ---
+        const questions = [
+            // VOCABULARY
+            {
+                category: "Vocabulary: Corporate",
+                question: "What does 'liability' mean in a corporate context?",
+                options: [
+                    "A great asset or advantage to a team.",
+                    "Legal responsibility for damage or injury.",
+                    "An emergency evacuation plan."
+                ],
+                correctIndex: 1,
+                explanation: "Liability refers to being legally responsible for something, often a financial or safety risk."
+            },
+            {
+                category: "Vocabulary: Emergency",
+                question: "What is a 'stampede'?",
+                options: [
+                    "A sudden panicked rush of a group of people.",
+                    "A device used to put out fires.",
+                    "A formal complaint filed with HR."
+                ],
+                correctIndex: 0,
+                explanation: "A stampede happens when a large group of people suddenly run in panic."
+            },
+            {
+                category: "Vocabulary: Behavior",
+                question: "If someone acts in a 'reckless' manner, they are...",
+                options: [
+                    "Acting very cautiously and carefully.",
+                    "Following all the established protocols.",
+                    "Doing dangerous things without thinking of consequences."
+                ],
+                correctIndex: 2,
+                explanation: "Reckless behavior ignores safety and potential consequences."
+            },
+            {
+                category: "Vocabulary: Corporate",
+                question: "What is a 'protocol'?",
+                options: [
+                    "A type of physical hazard in the workplace.",
+                    "An official procedure or system of rules.",
+                    "The legal department of a company."
+                ],
+                correctIndex: 1,
+                explanation: "A protocol is a set of established rules to be followed in specific situations."
+            },
+            {
+                category: "Vocabulary: Emergency",
+                question: "To 'trigger' an alarm means to...",
+                options: ["Cause it to start functioning.", "Turn it off completely.", "Ignore its warning."],
+                correctIndex: 0,
+                explanation: "To trigger means to activate or set off a mechanism or event."
+            },
+            // GRAMMAR 1: MODALS OF PAST REGRET
+            {
+                category: "Grammar: Past Regret",
+                question: "Which sentence correctly expresses a past regret?",
+                options: [
+                    "Dwight shouldn't lock the doors during a fire.",
+                    "Dwight shouldn't have locked the doors.",
+                    "Dwight must not have locked the doors."
+                ],
+                correctIndex: 1,
+                explanation: "We use 'should have / shouldn't have + past participle' to express regret about the past."
+            },
+            {
+                category: "Grammar: Past Regret",
+                question: "Complete the sentence: 'They ___ calm during the simulation.'",
+                options: ["should stay", "should have stayed", "should staying"],
+                correctIndex: 1,
+                explanation: "It was a good idea in the past that didn't happen: 'should have stayed'."
+            },
+            {
+                category: "Grammar: Past Regret",
+                question: "Rewrite this fact as a regret: 'Michael broke the window.'",
+                options: [
+                    "Michael shouldn't have broken the window.",
+                    "Michael didn't have to break the window.",
+                    "Michael wouldn't break the window."
+                ],
+                correctIndex: 0,
+                explanation: "He did it, but it was a bad idea: 'shouldn't have broken'."
+            },
+            {
+                category: "Grammar: Past Regret",
+                question: "Complete: 'Angela ___ her cat to the office.'",
+                options: ["shouldn't bring", "shouldn't brought", "shouldn't have brought"],
+                correctIndex: 2,
+                explanation: "Structure: shouldn't have + past participle (brought)."
+            },
+            {
+                category: "Grammar: Past Regret",
+                question: "What does 'You should have followed protocol' mean?",
+                options: [
+                    "You followed the protocol, and it was a good idea.",
+                    "You didn't follow the protocol, but it was necessary.",
+                    "You have to follow the protocol in the future."
+                ],
+                correctIndex: 1,
+                explanation: "'Should have' indicates an unfulfilled obligation or a missed good idea in the past."
+            },
+            // GRAMMAR 2: THIRD CONDITIONAL
+            {
+                category: "Grammar: 3rd Conditional",
+                question: "The Third Conditional is used to talk about...",
+                options: [
+                    "Future events that are very likely to happen.",
+                    "Imaginary or impossible situations in the past.",
+                    "Present habits and absolute truths."
+                ],
+                correctIndex: 1,
+                explanation: "It describes a hypothetical past situation and its hypothetical past result."
+            },
+            {
+                category: "Grammar: 3rd Conditional",
+                question: "Complete: 'If Dwight hadn't started the fire, Stanley ___ a heart attack.'",
+                options: [
+                    "won't have",
+                    "wouldn't have",
+                    "wouldn't have had"
+                ],
+                correctIndex: 2,
+                explanation: "Structure: If + past perfect, would have + past participle (had)."
+            },
+            {
+                category: "Grammar: 3rd Conditional",
+                question: "Complete: 'If they ___ to his PowerPoint, he wouldn't have tested them.'",
+                options: ["listened", "had listened", "have listened"],
+                correctIndex: 1,
+                explanation: "The 'If' clause in the Third Conditional requires the Past Perfect (had + past participle)."
+            },
+            {
+                category: "Grammar: 3rd Conditional",
+                question: "Which sentence is grammatically correct?",
+                options: [
+                    "If Michael stayed calm, the office wouldn't panic.",
+                    "If Michael had stayed calm, the office wouldn't have panicked.",
+                    "If Michael had stayed calm, the office didn't panic."
+                ],
+                correctIndex: 1,
+                explanation: "Correct structure: If + past perfect (had stayed), would have + past participle (panicked)."
+            },
+            {
+                category: "Grammar: 3rd Conditional",
+                question: "What does this sentence mean? 'If I had known it was a drill, I wouldn't have broken the vending machine.'",
+                options: [
+                    "I didn't know it was a drill, so I broke the machine.",
+                    "I knew it was a drill, but I broke it anyway.",
+                    "I don't know if it's a drill, so I might break it."
+                ],
+                correctIndex: 0,
+                explanation: "The Third Conditional expresses what would have happened in an alternate past. In reality, he didn't know, and he did break it."
+            }
+        ];
+
+        // --- 3. App State ---
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let hasAnswered = false;
+
+        // --- 4. Navigation Functions ---
+        function switchScreen(oldId, newId) {
+            document.getElementById(oldId).classList.replace('active', 'previous');
+            document.getElementById(newId).classList.remove('previous');
+            document.getElementById(newId).classList.add('active');
+        }
+
+        function startQuiz() {
+            currentQuestionIndex = 0;
+            score = 0;
+            switchScreen('screen-login', 'screen-quiz');
+            loadQuestion();
+        }
+
+        function restartApp() {
+            switchScreen('screen-results', 'screen-login');
+        }
+
+        // --- 5. Quiz Logic ---
+        function loadQuestion() {
+            hasAnswered = false;
+            const q = questions[currentQuestionIndex];
+            
+            // Update UI
+            document.getElementById('q-counter').innerText = `${currentQuestionIndex + 1}/15`;
+            document.getElementById('q-category').innerText = q.category;
+
+            document.getElementById('q-text').innerText = q.question;
+            document.getElementById('progress-bar').style.width = `${((currentQuestionIndex) / 15) * 100}%`;
+            
+            // Render Options
+            const container = document.getElementById('options-container');
+            container.innerHTML = '';
+            
+            q.options.forEach((opt, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn text-left p-4 text-sm md:text-base w-full';
+                btn.innerText = opt;
+                btn.onclick = () => selectOption(index, btn);
+                container.appendChild(btn);
+            });
+
+            // Reset Footer & Feedback
+            const nextBtn = document.getElementById('btn-next');
+            nextBtn.innerText = "SUBMIT";
+            nextBtn.disabled = true;
+            nextBtn.classList.add('opacity-50');
+
+            const fb = document.getElementById('feedback-area');
+            fb.classList.add('hidden');
+        }
+
+        let selectedIndex = null;
+        let selectedBtnEl = null;
+
+        function selectOption(index, btnEl) {
+            if(hasAnswered) return;
+
+            selectedIndex = index;
+            selectedBtnEl = btnEl;
+
+            document.querySelectorAll('.option-btn').forEach(b => {
+                b.classList.remove('selected');
+            });
+
+            btnEl.classList.add('selected');
+
+            const nextBtn = document.getElementById('btn-next');
+            nextBtn.disabled = false;
+            nextBtn.classList.remove('opacity-50');
+        }
+
+        function checkAnswer() {
+            hasAnswered = true;
+            const q = questions[currentQuestionIndex];
+            const isCorrect = (selectedIndex === q.correctIndex);
+            const fb = document.getElementById('feedback-area');
+            const nextBtn = document.getElementById('btn-next');
+
+            if(isCorrect) {
+                score++;
+                selectedBtnEl.classList.replace('selected', 'correct');
+                fb.classList.remove('hidden', 'border-red-500', 'text-red-700', 'bg-red-50');
+                fb.classList.add('border-green-500', 'text-green-800', 'bg-green-50');
+                fb.innerHTML = `COMPLIANT: <span class="font-normal text-slate-700">${q.explanation}</span>`;
+            } else {
+                selectedBtnEl.classList.replace('selected', 'wrong');
+                // Highlight correct one
+                const allBtns = document.querySelectorAll('.option-btn');
+                allBtns[q.correctIndex].classList.add('correct');
+                
+                fb.classList.remove('hidden', 'border-green-500', 'text-green-800', 'bg-green-50');
+                fb.classList.add('border-red-500', 'text-red-700', 'bg-red-50');
+                fb.innerHTML = `VIOLATION: <span class="font-normal text-slate-700">${q.explanation}</span>`;
+            }
+
+            nextBtn.innerText = (currentQuestionIndex === 14) ? "FINALIZE REPORT" : "NEXT QUESTION";
+            nextBtn.onclick = handleNext;
+        }
+
+        function handleNext() {
+            if(currentQuestionIndex < 14) {
+                currentQuestionIndex++;
+                loadQuestion();
+            } else {
+                finishQuiz();
+            }
+        }
+
+        function finishQuiz() {
+            document.getElementById('progress-bar').style.width = '100%';
+            setTimeout(() => {
+                switchScreen('screen-quiz', 'screen-results');
+                renderResults();
+            }, 300);
+        }
+
+        function renderResults() {
+            document.getElementById('final-score').innerText = score;
+            const icon = document.getElementById('result-icon');
+            const title = document.getElementById('result-title');
+            const msg = document.getElementById('result-msg');
+
+            if (score >= 13) {
+                icon.innerText = "🏆";
+                title.innerText = "Crisis Manager";
+                title.classList.replace('text-slate-800', 'text-sky-700');
+                msg.innerText = "Excellent analysis. Your grasp of advanced conditionals and corporate liability is perfect. Promotion approved.";
+            } else if (score >= 8) {
+                icon.innerText = "📋";
+                title.innerText = "HR Representative";
+                title.classList.replace('text-sky-700', 'text-slate-800');
+                title.classList.replace('text-red-600', 'text-slate-800');
+                msg.innerText = "Adequate performance. You managed to avoid a complete disaster, but review your Modals of Regret.";
+            } else {
+                icon.innerText = "🔥";
+                title.innerText = "Liability Risk";
+                title.classList.replace('text-slate-800', 'text-red-600');
+                title.classList.replace('text-sky-700', 'text-red-600');
+                msg.innerText = "Total system failure. You caused a panic. Please retake the entire compliance module immediately.";
+            }
+        }
+
+    </script>
+</body>
+</html>
